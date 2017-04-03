@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 from __future__ import print_function  
 
@@ -13,6 +13,7 @@ from __future__ import print_function
 # conda install pip
 # pip install pyautogui
 # pip install pyscard-1.9.5-cp27-cp27m-win32.whl
+# pip install pyscard-1.9.5-cp35-cp35m-win32.whl
 
 import sys
 from PyQt5 import QtCore, QtGui, uic, QtWidgets
@@ -174,7 +175,7 @@ class MyApp(QtWidgets.QMainWindow, Ui_MainWindow):
     self.log("Critial Error: " + str(data) )
     QMessageBox.critical(self, "NFC Tool", data)
     #QCoreApplication.instance().quit()
-    QtCore.QCoreApplication.exit()
+    #QtCore.QCoreApplication.exit()
 
 
 
