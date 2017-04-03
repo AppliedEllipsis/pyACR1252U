@@ -7,8 +7,8 @@
  - Setup an environment for Python 3.5 or 2.7 Run console from your
    environment section.
     - hit play button open terminal
- - change directory to the dependencies folder, example cmd: cd /D
-   Z:\projects\NFC\py\dependencies
+ - change directory to the dependencies folder, example cmd: **"cd /D
+   Z:\projects\NFC\py\dependencies"**
  - conda install pip
  - conda install PyQT
  - pip install pyautogui
@@ -23,5 +23,20 @@
  - Get the version of pyscard for your environment or compile it.  I get
    the pyscard binaries/artifacts from
    https://ci.appveyor.com/project/LudovicRousseau/pyscard
-  - click the release for the right python version and architecture, then
+ - click the release for the right python version and architecture, then
    click artifacts tab, download the whl file and install with pip
+
+
+**For Creating EXE reuirements**
+ - pip install cx_freeze
+
+**For Creating EXE**
+ - delete the *build* folder
+ - update **# change this for yoru QT version** section in setup.py to your QT version folder.
+ - change directory to the project folder, example cmd: **"cd /D
+   Z:\projects\NFC\py\"**
+ - python setup.py build
+    - your exe package will be in the *build* folder
+- python setup.py bdist_msi
+    - your msi install package will be in the *dist* folder
+ 

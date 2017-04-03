@@ -11,3 +11,8 @@ Windows Tool to Read/Write/Manipulate GoToTags NFC ACR1252U NTAG213/NTAG216 NXP 
 * When it reads, it types the characters into whatever window has focus, followed by an enter.
 * It's currently only compatible with Python 2, but I am in the process of making it 2/3 compatible.
 
+# If you get an error in file .../PyQt5/uic/port_v2/load_plugin.py in line 38
+# replace:
+#     except Exception, e:
+# with:
+#     except Exception as e:

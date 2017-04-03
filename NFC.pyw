@@ -15,18 +15,18 @@ from __future__ import print_function
 # pip install pyscard-1.9.5-cp27-cp27m-win32.whl
 # pip install pyscard-1.9.5-cp35-cp35m-win32.whl
 
-import sys
+
+import sys, datetime, time, re
 from PyQt5 import QtCore, QtGui, uic, QtWidgets
 from PyQt5.QtCore import QObject, pyqtSignal, QCoreApplication
-import datetime
-# import urllib2
 from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QMessageBox
 
 from smartcard.scard import *
 import smartcard.util
 # from smartcard.System import readers
 import pyautogui
-import time, re
+
+
 
 # fixes icon from being pythonw's in tray
 import ctypes
