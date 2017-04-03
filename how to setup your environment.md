@@ -1,0 +1,27 @@
+
+**How to setup your Environment**
+
+----------
+
+ - Install 32bit Anaconda
+ - Setup an environment for Python 3.5 or 2.7 Run console from your
+   environment section.
+    - hit play button open terminal
+ - change directory to the dependencies folder, example cmd: cd /D
+   Z:\projects\NFC\py\dependencies
+ - conda install pip
+ - conda install PyQT
+ - pip install pyautogui
+
+**For python 2.7**
+ - pip install pyscard-1.9.5-cp27-cp27m-win32.whl
+
+**For python 3.5**
+ - pip install pyscard-1.9.5-cp35-cp35m-win32.whl
+
+**For any other version, or 64bit**
+ - Get the version of pyscard for your environment or compile it.  I get
+   the pyscard binaries/artifacts from
+   https://ci.appveyor.com/project/LudovicRousseau/pyscard
+  - click the release for the right python version and architecture, then
+   click artifacts tab, download the whl file and install with pip
