@@ -1,4 +1,0 @@
-PyQt4
-py2exe_py2
-smartcard
-pyautogui
