@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 from __future__ import print_function  
 
@@ -9,10 +9,17 @@ from __future__ import print_function
 # uses a  tracks (5 and 6) in a single track 5 write
 # NFC Forum Type 2
 
+# now using anaconda
+# conda install pip
+# pip install pyautogui
+# pip install pyscard-1.9.5-cp27-cp27m-win32.whl
+
 import sys
-from PyQt4 import QtCore, QtGui, uic
+from PyQt5 import QtCore, QtGui, uic, QtWidgets
+from PyQt5.QtCore import QObject, pyqtSignal
 import datetime
 # import urllib2
+from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QMessageBox
 
 from smartcard.scard import *
 import smartcard.util
@@ -31,10 +38,10 @@ qtCreatorFile = "ui/nfc.ui"
 Ui_MainWindow, QtBaseClass = uic.loadUiType(qtCreatorFile)
 
 
-class SystemTrayIcon(QtGui.QSystemTrayIcon):
+class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
     def __init__(self, icon, parent=None):
-       QtGui.QSystemTrayIcon.__init__(self, icon, parent)
-       menu = QtGui.QMenu(parent)
+       QtWidgets.QSystemTrayIcon.__init__(self, icon, parent)
+       menu = QtWidgets.QMenu(parent)
        showAction = menu.addAction("Show")
        menu.addSeparator()
        exitAction = menu.addAction("Exit")
@@ -44,8 +51,10 @@ class SystemTrayIcon(QtGui.QSystemTrayIcon):
        self.window.start_nfc_thread()
        
 
-       QtCore.QObject.connect(showAction,QtCore.SIGNAL('triggered()'), self.showit)
-       QtCore.QObject.connect(exitAction,QtCore.SIGNAL('triggered()'), self.exit)
+       showAction.triggered.connect(self.showit)
+       exitAction.triggered.connect(self.exit)
+       #QtCore.QObject.connect(showAction,QtCore.SIGNAL('triggered()'), self.showit)
+       #QtCore.QObject.connect(exitAction,QtCore.SIGNAL('triggered()'), self.exit)
        # add double click and more events
        # QtCore.QObject.connect(self,QtCore.SIGNAL('activated(QSystemTrayIcon::ActivationReason)'), self.showit)
        # self.connect(self.icon, SIGNAL("activated(QSystemTrayIcon::ActivationReason)"), self.iconClicked)
@@ -71,15 +80,15 @@ class SystemTrayIcon(QtGui.QSystemTrayIcon):
       
 
 
-class MyApp(QtGui.QMainWindow, Ui_MainWindow):
+class MyApp(QtWidgets.QMainWindow, Ui_MainWindow):
   threads = []
 
   def __init__(self):
-    QtGui.QMainWindow.__init__(self)
+    QtWidgets.QMainWindow.__init__(self)
     Ui_MainWindow.__init__(self)
     self.setupUi(self)
 
-    self.txt_code.setEchoMode(QtGui.QLineEdit.Password) # set password mask on txt
+    self.txt_code.setEchoMode(QtWidgets.QLineEdit.Password) # set password mask on txt
     # self.txt_code.editingFinished.connect(self.setProgrammingMode)
     self.txt_code.returnPressed.connect(self.setProgrammingMode)
     self.btn_set.clicked.connect(self.setProgrammingMode)
@@ -100,13 +109,13 @@ class MyApp(QtGui.QMainWindow, Ui_MainWindow):
 
 
   def closeEvent(self, event):
-      reply = QtGui.QMessageBox.question(
+      reply = QMessageBox.question(
           self,
           'NFC Tool',"Are you sure to quit?",
-          QtGui.QMessageBox.Yes | QtGui.QMessageBox.No,
-          QtGui.QMessageBox.No)
+          QMessageBox.Yes | QMessageBox.No,
+          QMessageBox.No)
 
-      if reply == QtGui.QMessageBox.Yes:
+      if reply == QMessageBox.Yes:
           event.accept()
       else:
           # self.tray_icon.show()
@@ -125,7 +134,7 @@ class MyApp(QtGui.QMainWindow, Ui_MainWindow):
       # card_code = int(self.txt_code.text()) # force int?
       card_code = (self.txt_code.text())
       if len(card_code) != 4:
-        QtGui.QMessageBox.warning(self, "NFC Tool", "Error: The code must be 4 characters long.")
+        QMessageBox.warning(self, "NFC Tool", "Error: The code must be 4 characters long.")
         return
 
       if len(self.threads) > 0:
@@ -156,13 +165,13 @@ class MyApp(QtGui.QMainWindow, Ui_MainWindow):
     self.btn_set.setText('Program Card')
     self.txt_code.setText('')
     self.txt_code.setEnabled(True)
-    QtGui.QMessageBox.information(self, "NFC Tool", "The card has been programmed.")
+    QMessageBox.information(self, "NFC Tool", "The card has been programmed.")
 
 
   def on_critical(self, data):
     self.log("Critial Error: " + str(data) )
-    QtGui.QMessageBox.critical(self, "NFC Tool", data)
-    QtCore.QCoreApplication.exit()
+    QMessageBox.critical(self, "NFC Tool", data)
+    #QtCore.QCoreApplication.exit()
 
 
 
@@ -353,7 +362,7 @@ def toStr(s):
 
 
 def main():
-  app = QtGui.QApplication(sys.argv)
+  app = QtWidgets.QApplication(sys.argv)
 
   app_icon = QtGui.QIcon()
   app_icon.addFile('ui/nfc-16.png', QtCore.QSize(16,16))
@@ -363,7 +372,7 @@ def main():
   app_icon.addFile('ui/nfc-256.png', QtCore.QSize(256,256))
   app.setWindowIcon(app_icon)
 
-  w = QtGui.QWidget()
+  w = QtWidgets.QWidget()
 
   trayIcon = SystemTrayIcon(QtGui.QIcon("ui/nfc-48.png"), w)
   trayIcon.show()
