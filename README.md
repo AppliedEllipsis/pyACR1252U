@@ -3,7 +3,7 @@ Windows Tool to Read/Write/Manipulate GoToTags NFC ACR1252U NTAG213/NTAG216 NXP 
 
 **[Check Release Section](https://github.com/AppliedEllipsis/pyACR1252U/releases)** for Exe/Binary release you can use without an Python Environment and includes dependencies.
 
-**[How to setup your environment.](/how to setup your environment.md)** 
+**[How to setup your environment](how%20to%20setup%20your%20environment.md)** 
 
 **It currently performs:**
 * Reads and Writes 4 character pins to NFC.
