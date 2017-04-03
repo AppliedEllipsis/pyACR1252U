@@ -16,7 +16,7 @@ from __future__ import print_function
 
 import sys
 from PyQt5 import QtCore, QtGui, uic, QtWidgets
-from PyQt5.QtCore import QObject, pyqtSignal
+from PyQt5.QtCore import QObject, pyqtSignal, QCoreApplication
 import datetime
 # import urllib2
 from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QMessageBox
@@ -67,14 +67,16 @@ class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
       self.window.showNormal()
   
     def exit(self):
-      reply = QtGui.QMessageBox.question(
+      reply = QMessageBox.question(
           self.window,
           'NFC Tool',"Are you sure to quit?",
-          QtGui.QMessageBox.Yes | QtGui.QMessageBox.No,
-          QtGui.QMessageBox.No)
+          QMessageBox.Yes | QMessageBox.No,
+          QMessageBox.No)
 
-      if reply == QtGui.QMessageBox.Yes:
+      if reply == QMessageBox.Yes:
           QtCore.QCoreApplication.exit()
+          #QCoreApplication.instance().quit()
+          
 
 
       
@@ -171,7 +173,8 @@ class MyApp(QtWidgets.QMainWindow, Ui_MainWindow):
   def on_critical(self, data):
     self.log("Critial Error: " + str(data) )
     QMessageBox.critical(self, "NFC Tool", data)
-    #QtCore.QCoreApplication.exit()
+    #QCoreApplication.instance().quit()
+    QtCore.QCoreApplication.exit()
 
 
 

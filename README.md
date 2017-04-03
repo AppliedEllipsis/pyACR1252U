@@ -1,6 +1,8 @@
 # pyACR1252U
 Windows Tool to Read/Write/Manipulate GoToTags NFC ACR1252U NTAG213/NTAG216 NXP MIFARE Ultralight Tags
 
+**Check Release Section** for Exe/Binary release you can use without an Python Environment and includes dependencies.
+
 **It currently performs:**
 * Reads and Writes 4 character pins to NFC.
 * QT Gui App that sits in the Windows Tray Icon
