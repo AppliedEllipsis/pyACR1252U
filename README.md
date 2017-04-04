@@ -7,12 +7,16 @@ Windows Tool to Read/Write/Manipulate GoToTags NFC ACR1252U NTAG213/NTAG216 NXP 
 
 **It currently performs:**
 * Reads and Writes 4 character pins to NFC.
+  * **To write**, open the window, type in a code and press enter or program.
+    * Hold the card against the reader/writer until it says it's been programmed.
+  * **To read**, just have the application loaded in the tray and have a keyboard input box in focus.
+    * Hold the card against the reader/writer until it writes out the code followed by an enter.
+    * This is good for pin input in POS devices when you don't want others to see you type in the code.
 * QT Gui App that sits in the Windows Tray Icon
+  * Click the icon to show the window, right click (maybe 2x), to show exit window.
+  * minimizes to the tray icon, the X shows a prompt to really quit, clicking no will minimize to tray.
+  * The tray icon may be hidden in the more tray icons section in Windows.
+* Only run 1 instance of the application.
 * When it reads, it types the characters into whatever window has focus, followed by an enter.
-* It's currently only compatible with Python 2, but I am in the process of making it 2/3 compatible.
+* It was orignally written for Python 2 using PyQT4, but it's now Python 2/3 compatiable using PyQT5. I plan on only coding it against Python 3 and PyQT5 from now on, so backwards compatibality may break.  Exe's were originally packaged using py2exe. However, it is not compatiable with Python 3.5, so I moved to cx_freeze.
 
-# If you get an error in file .../PyQt5/uic/port_v2/load_plugin.py in line 38
-# replace:
-#     except Exception, e:
-# with:
-#     except Exception as e:
