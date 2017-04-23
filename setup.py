@@ -25,8 +25,10 @@ options = {
           'smartcard',
           'pyautogui',
           'time',
+          'pprint',
           're',
           'ctypes',
+          'subprocess',
           ],
         'include_files':[
             'libusb-1.0.dll',
@@ -51,7 +53,7 @@ target = Executable(
 
 
 setup(  name = "NFC",
-        version = "0.1",
+        version = "0.2",
         author="Applied Ellipsis",
         description = "NFC Tool for ACR1252U",
         options=options,

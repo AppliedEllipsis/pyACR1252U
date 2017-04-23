@@ -16,7 +16,8 @@ from __future__ import print_function
 # pip install pyscard-1.9.5-cp35-cp35m-win32.whl
 
 
-import sys, datetime, time, re
+import sys, ctypes, datetime, time, re, subprocess
+
 from PyQt5 import QtCore, QtGui, uic, QtWidgets
 from PyQt5.QtCore import QObject, pyqtSignal, QCoreApplication
 from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QMessageBox
@@ -26,7 +27,7 @@ import smartcard.util
 # from smartcard.System import readers
 import pyautogui
 
-
+from pprint import pprint
 
 # fixes icon from being pythonw's in tray
 import ctypes
@@ -48,24 +49,34 @@ class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
        exitAction = menu.addAction("Exit")
        self.setContextMenu(menu)
 
-       self.window = MyApp()
+       self.window = MyApp(self)
        self.window.start_nfc_thread()
        
 
-       showAction.triggered.connect(self.showit)
+       showAction.triggered.connect(self.show_window)
        exitAction.triggered.connect(self.exit)
        #QtCore.QObject.connect(showAction,QtCore.SIGNAL('triggered()'), self.showit)
        #QtCore.QObject.connect(exitAction,QtCore.SIGNAL('triggered()'), self.exit)
        # add double click and more events
        # QtCore.QObject.connect(self,QtCore.SIGNAL('activated(QSystemTrayIcon::ActivationReason)'), self.showit)
        # self.connect(self.icon, SIGNAL("activated(QSystemTrayIcon::ActivationReason)"), self.iconClicked)
-       self.activated.connect(self.showit)
+       self.activated.connect(self.handle_activated)
 
-
-    def showit(self):
-      print('Show Window')
-      # self.window.show()
+    def show_window(self):
+      print('tray show_window()')
       self.window.showNormal()
+
+    def handle_activated(self, reason):
+      print('tray handle_activated()', reason)
+      if reason == QtWidgets.QSystemTrayIcon.Trigger:
+          # self.window.showNormal()
+          ''
+      elif reason == QtWidgets.QSystemTrayIcon.DoubleClick:
+          self.show_window()
+      elif reason == QtWidgets.QSystemTrayIcon.Context:
+        ''
+        # self.window.showNormal()
+      
   
     def exit(self):
       reply = QMessageBox.question(
@@ -75,6 +86,7 @@ class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
           QMessageBox.No)
 
       if reply == QMessageBox.Yes:
+          self.hide()
           QtCore.QCoreApplication.exit()
           #QCoreApplication.instance().quit()
           
@@ -86,11 +98,15 @@ class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
 class MyApp(QtWidgets.QMainWindow, Ui_MainWindow):
   threads = []
 
-  def __init__(self):
-    QtWidgets.QMainWindow.__init__(self)
+  def __init__(self, trayicon):
+    self.trayicon = trayicon
+
+
+    QtWidgets.QMainWindow.__init__(self)      
     Ui_MainWindow.__init__(self)
     self.setupUi(self)
 
+    self.service_stop_CertPropSvc_if_running()
     self.txt_code.setEchoMode(QtWidgets.QLineEdit.Password) # set password mask on txt
     # self.txt_code.editingFinished.connect(self.setProgrammingMode)
     self.txt_code.returnPressed.connect(self.setProgrammingMode)
@@ -112,18 +128,19 @@ class MyApp(QtWidgets.QMainWindow, Ui_MainWindow):
 
 
   def closeEvent(self, event):
-      reply = QMessageBox.question(
-          self,
-          'NFC Tool',"Are you sure to quit?",
-          QMessageBox.Yes | QMessageBox.No,
-          QMessageBox.No)
+    reply = QMessageBox.question(
+        self,
+        'NFC Tool',"Are you sure to quit?",
+        QMessageBox.Yes | QMessageBox.No,
+        QMessageBox.No)
 
-      if reply == QMessageBox.Yes:
-          event.accept()
-      else:
-          # self.tray_icon.show()
-          self.hide()
-          event.ignore()
+    if reply == QMessageBox.Yes:
+        self.trayicon.hide()
+        event.accept()
+    else:
+        # self.tray_icon.show()
+        self.hide()
+        event.ignore()
 
 
   def setProgrammingMode(self):
@@ -162,6 +179,10 @@ class MyApp(QtWidgets.QMainWindow, Ui_MainWindow):
     print(ts, data)
     # self.listWidget.addItem( ts + ": " + data )
     self.listWidget.insertItem( 0, ts + ":     " + str(data) )
+    max_log = 50
+    if self.listWidget.count() > max_log:
+      while self.listWidget.count() > max_log:
+        self.listWidget.takeItem(max_log)
 
   def on_programming_done(self, data):
     self.log("Programming Done: " + str(data) )
@@ -176,6 +197,73 @@ class MyApp(QtWidgets.QMainWindow, Ui_MainWindow):
     QMessageBox.critical(self, "NFC Tool", data)
     #QCoreApplication.instance().quit()
     #QtCore.QCoreApplication.exit()
+
+
+  def is_admin(self):
+    try:
+        return ctypes.windll.shell32.IsUserAnAdmin()
+    except:
+        return False
+
+  def service_check_state(self, service_name):
+    try:
+      DETACHED_PROCESS = 0x00000008
+      res = subprocess.check_output(['sc', 'query', service_name], creationflags=DETACHED_PROCESS, stderr=subprocess.STDOUT)
+    except subprocess.CalledProcessError as e:
+      # raise RuntimeError("command '{}' return with error (code {}): {}".format(e.cmd, e.returncode, e.output))
+      return False
+    res = res.decode('unicode_escape')
+    matchObj = re.search( r'STATE.+\:.*(STOPPED|RUNNING)', res, re.M|re.I)
+    if matchObj:
+      if matchObj.group(1).upper() == 'RUNNING':
+        return True
+      else:
+        return False
+    return False
+
+
+  def service_stop(self, service_name):
+    # runs as admin
+    ctypes.windll.shell32.ShellExecuteW(None, "runas", "sc", "stop " + service_name, None, 1)
+
+
+  def service_stop_CertPropSvc_if_running(self):
+    service_name = 'CertPropSvc'
+
+    if self.service_check_state(service_name):
+      if not self.is_admin():
+        msg = """
+The Certificate Propagation service is running...
+
+This creates an device inserted notification for 
+"unknown smart card" in windows each time an NFC is touched.
+
+This application is going to attempt to disable it...
+
+You may need to click "yes" and "login" to an 
+"user access control" request or rerun this as admin.
+
+You can choose "no" or "not login" and 
+this program will still function, 
+but it will be very annoying if you have speakers on.
+"""
+        print(msg)
+        QMessageBox.warning(self, "NFC Tool", msg)
+      else:
+        print('Launched as Admin')
+      self.service_stop(service_name)
+      running = True
+      for i in range(1,10):
+        time.sleep(0.5)
+        running = self.service_check_state(service_name)
+        if not running:
+          break
+      if running:
+        msg = "Certificate Propagation service failed to stop... \nDid you say no to the prompt?"
+        print(msg)
+        QMessageBox.warning(self, "NFC Tool", msg)
+      else:
+        print('Successfully stopped the Certificate Propagation service.')
 
 
 
@@ -244,7 +332,7 @@ class NFC_Thread(QtCore.QThread):
             characters = [chr(n) for n in data]
             msg = ''.join(characters[0:8])
             print(msg)
-            matchObj = re.match( r'!~(.*)~!', msg, re.M|re.I)
+            matchObj = re.search( r'!~(.*)~!', msg, re.M|re.I)
             if matchObj:
               # print('  found valid code')
               # print(matchObj.group(1))
@@ -365,7 +453,25 @@ def toStr(s):
 
 
 
+def is_process_name_running(process_name):
+  # try:
+  DETACHED_PROCESS = 0x00000008
+  res = subprocess.check_output(['wmic', 'process', 'get', 'caption'], creationflags=DETACHED_PROCESS, stderr=subprocess.STDOUT)
+  # except subprocess.CalledProcessError as e:
+  #   # raise RuntimeError("command '{}' return with error (code {}): {}".format(e.cmd, e.returncode, e.output))
+  #   return False
+  res = res.decode('unicode_escape')
+  # print('already check:', res)
+  if process_name.lower() in res.lower():
+    return True
+  else:
+    return False
+
+
 def main():
+
+
+
   app = QtWidgets.QApplication(sys.argv)
 
   app_icon = QtGui.QIcon()
@@ -386,6 +492,11 @@ def main():
   sys.exit(app.exec_())
 
 if __name__ == '__main__':
+  if is_process_name_running('nfc.exe'):
+    msg = "Error: There is another copy of this application running.."
+    print(msg)
+    ctypes.windll.user32.MessageBoxW(None, msg, "NFC", 0x10 | 0 | 0x1000)
+  else:
     main()
 
 
