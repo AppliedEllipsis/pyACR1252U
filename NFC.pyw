@@ -9,11 +9,7 @@ from __future__ import print_function
 # uses a  tracks (5 and 6) in a single track 5 write
 # NFC Forum Type 2
 
-# now using anaconda
-# conda install pip
-# pip install pyautogui
-# pip install pyscard-1.9.5-cp27-cp27m-win32.whl
-# pip install pyscard-1.9.5-cp35-cp35m-win32.whl
+# see "how to setup your environment.md"
 
 
 import sys, ctypes, datetime, time, re, subprocess
