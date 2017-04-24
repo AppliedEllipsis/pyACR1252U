@@ -330,9 +330,9 @@ class NFC_Thread(QtCore.QThread):
             print(msg)
             matchObj = re.search( r'!~(.*)~!', msg, re.M|re.I)
             if matchObj:
-              # print('  found valid code')
               # print(matchObj.group(1))
-              self.data_update.emit( "\tFound Valid Code" )
+              self.data_update.emit( "\tFound Valid Code" ) #           76543210                   repeat
+              data, sw1, sw2 = connection.transmit( [0xff, 0x0, 0x40, 0b10001010, 0x04, 0x00, 0x01, 0x01, 0x02] )
               # self.data_update.emit( matchObj.group(1) )
               pyautogui.typewrite(matchObj.group(1) + "\n")
               return
@@ -348,8 +348,103 @@ class NFC_Thread(QtCore.QThread):
     #     print('\tState unknowned')
 
 
+  def send_control_code(self, hcard, command):
+    self.data_update.emit( "send_control_code" )
+    print(command)
+    hresult, response = SCardControl(hcard, SCARD_CTL_CODE(3500), command)
+    if hresult != SCARD_S_SUCCESS:
+      raise(error, 'SCardControl(): ' + SCardGetErrorMessage(hresult))
+    print(''.join('{:02X} '.format(x) for x in response))
+    # print(''.join('{0:b} '.format(x) for x in response))
+    return response
+
+  def beep(self, hcard, duration):
+    self.data_update.emit( "beep")
+    self.send_control_code(hcard, [0xE0, 0x0, 0x0, 0x28, 0x01, duration])
+
+
+  def get_led(self, hcard):
+    pprint('get_led()')
+    resp = self.send_control_code(hcard, [0xE0, 0x0, 0x0, 0x29, 0x00])
+    if resp[-1] == 0b11:
+      return 'orange'
+    elif resp[-1] == 0b1:
+      return 'red'
+    elif resp[-1] == 0b01:
+      return 'green'
+    else:
+      return 'off'
+
+
+  def set_led(self, hcard, color):
+    if color == 'orange':
+      color=0b11
+    elif color == 'red':
+      color=0b1
+    elif color == 'green':
+      color=0b01
+    else:
+      color=0b0
+    self.send_control_code(hcard, [0xE0, 0x0, 0x0, 0x29, 0x01, color])
+
+
   def run(self):
     try:
+
+
+
+
+      hresult, hcontext_cmd = SCardEstablishContext(SCARD_SCOPE_USER)
+      if hresult != SCARD_S_SUCCESS:
+        self.data_critical.emit( 'Failed to establish context: ' + SCardGetErrorMessage(hresult))
+        raise error( 'Failed to establish context: ' + SCardGetErrorMessage(hresult))
+      # print('Context established!')
+      self.data_update.emit('Context established!')
+
+      try:
+        hresult, readers_cmd = SCardListReaders(hcontext_cmd, [])
+        if hresult != SCARD_S_SUCCESS:
+            self.data_critical.emit('Failed to list readers: ' + SCardGetErrorMessage(hresult) )
+            raise error( 'Failed to list readers: ' + SCardGetErrorMessage(hresult) )
+        
+        # print('PCSC Readers:', readers_cmd)
+        # msg = 'PCSC Readers:'
+        # for i in range(len(readers_cmd)):
+        #   self.data_update.emit( 'Reader: ' + str(readers_cmd[i]) )
+        
+
+        self.reader_hcard_ = {}
+        for i in range(len(readers_cmd)):
+          hresult, hcard, dwActiveProtocol = SCardConnect(hcontext_cmd, readers_cmd[i], SCARD_SHARE_DIRECT, 0)
+          if hresult != SCARD_S_SUCCESS:
+            raise(error, 'SCardConnect(): ' + SCardGetErrorMessage(hresult))
+          # pprint(self.reader_hcard_)
+          self.send_control_code(hcard, [0xE0, 0x0, 0x0, 0x21, 0x01, 0b11100100]) # disable led unless contact, then make it orange, disable beeps unless we beep it
+          self.beep(hcard, 0x03)
+          time.sleep(0.1)
+
+      except (KeyboardInterrupt, SystemExit):
+          raise
+      except error as e:
+        print(e)
+      finally:
+        ''
+        hresult = SCardReleaseContext(hcontext_cmd)
+        if hresult != SCARD_S_SUCCESS:
+            self.data_critical.emit( 'Failed to release context: ' + SCardGetErrorMessage(hresult))
+            raise error( 'Failed to release context: ' + SCardGetErrorMessage(hresult))
+        print('Released context.')
+        self.data_update.emit('Released context.')
+
+
+
+
+
+
+
+
+
+
       hresult, hcontext = SCardEstablishContext(SCARD_SCOPE_USER)
       if hresult != SCARD_S_SUCCESS:
         self.data_critical.emit( 'Failed to establish context: ' + SCardGetErrorMessage(hresult))
@@ -367,14 +462,14 @@ class NFC_Thread(QtCore.QThread):
         msg = 'PCSC Readers:'
         for i in range(len(readers)):
           self.data_update.emit( 'Reader: ' + str(readers[i]) )
-        
 
-        readerstates = []
+
+        reader_states = []
         for i in range(len(readers)):
-            readerstates += [(readers[i], SCARD_STATE_UNAWARE)]
+            reader_states += [(readers[i], SCARD_STATE_UNAWARE)]
 
         # get initial state
-        hresult, newstates = SCardGetStatusChange(hcontext, 0, readerstates)
+        hresult, newstates = SCardGetStatusChange(hcontext, 0, reader_states)
 
         while True:
             # try:
@@ -392,16 +487,18 @@ class NFC_Thread(QtCore.QThread):
 
 
                 # print('----- New reader and card states are: -----------')
-                # print self.card_present_
+                # print(self.card_present_)
                 for i in newstates:
                     self.nfc_process_state(i)
             except : pass 
 
-        # hresult, newstates = SCardGetStatusChange(hcontext, 0, readerstates)
+        # hresult, newstates = SCardGetStatusChange(hcontext, 0, reader_states)
         # for i in newstates:
         #     self.nfc_process_state(i)
       except (KeyboardInterrupt, SystemExit):
           raise
+      except error as e:
+        print(e)
       finally:
           hresult = SCardReleaseContext(hcontext)
           if hresult != SCARD_S_SUCCESS:
@@ -451,8 +548,8 @@ def toStr(s):
 
 def is_process_name_running_more_than_once(process_name):
   try:
-  DETACHED_PROCESS = 0x00000008
-  res = subprocess.check_output(['wmic', 'process', 'get', 'caption'], creationflags=DETACHED_PROCESS, stderr=subprocess.STDOUT)
+    DETACHED_PROCESS = 0x00000008
+    res = subprocess.check_output(['wmic', 'process', 'get', 'caption'], creationflags=DETACHED_PROCESS, stderr=subprocess.STDOUT)
   except subprocess.CalledProcessError as e:
     # raise RuntimeError("command '{}' return with error (code {}): {}".format(e.cmd, e.returncode, e.output))
     return False
@@ -488,7 +585,7 @@ def main():
   sys.exit(app.exec_())
 
 if __name__ == '__main__':
-  if is_process_name_runnnig_more_than_once('nfc.exe'):  # this will only work against exe copies
+  if is_process_name_running_more_than_once('nfc.exe'):  # this will only work against exe copies
     msg = "Error: There is another copy of this application running.."
     print(msg)
     ctypes.windll.user32.MessageBoxW(None, msg, "NFC", 0x10 | 0 | 0x1000) # flags MB_ICONERROR | MB_OK | MB_SYSTEMMODAL
