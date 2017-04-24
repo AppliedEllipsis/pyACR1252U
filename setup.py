@@ -34,6 +34,8 @@ options = {
             'libusb-1.0.dll',
             'libusb-1.0.lib',
             'libusb-1.0.pdb',
+            'libusb-1.0.pdb',
+            'launchNFC.cmd',
             'ui',
             os.path.join(ANACONDA_INSTALL_DIR, 'pkgs', 'qt-5.6.2-vc14_3', 'Library', 'plugins', 'platforms'), # change this for yoru QT version
             # ex: %HOMEPATH%\Anaconda2\pkgs\qt-5.6.2-vc14_3\Library\plugins\platforms

@@ -292,9 +292,9 @@ class NFC_Thread(QtCore.QThread):
     # if eventstate & SCARD_STATE_IGNORE:
     #     print('\tIgnore reader')
     # if eventstate & SCARD_STATE_UNAVAILABLE:
-    #     print('\tReader unavailable')
+    #     pint('\tReader unavailable')
     if eventstate & SCARD_STATE_EMPTY:
-      # print('\tReader empty')
+      # print(r'\tReader empty')
       if self.card_present_[reader] != 0:
         self.data_update.emit( "Card removed from reader: " + str(reader) )
         self.card_present_[reader] = 0
@@ -350,7 +350,7 @@ class NFC_Thread(QtCore.QThread):
 
 
   def send_control_code(self, hcard, command):
-    self.data_update.emit( "send_control_code" )
+    # self.data_update.emit( "send_control_code" )
     print(command)
     hresult, response = SCardControl(hcard, SCARD_CTL_CODE(3500), command)
     if hresult != SCARD_S_SUCCESS:
@@ -360,12 +360,12 @@ class NFC_Thread(QtCore.QThread):
     return response
 
   def beep(self, hcard, duration):
-    self.data_update.emit( "beep")
+    # self.data_update.emit( "beep")
     self.send_control_code(hcard, [0xE0, 0x0, 0x0, 0x28, 0x01, duration])
 
 
   def get_led(self, hcard):
-    pprint('get_led()')
+    # pprint('get_led()')
     resp = self.send_control_code(hcard, [0xE0, 0x0, 0x0, 0x29, 0x00])
     if resp[-1] == 0b11:
       return 'orange'
@@ -397,10 +397,10 @@ class NFC_Thread(QtCore.QThread):
 
       hresult, hcontext_cmd = SCardEstablishContext(SCARD_SCOPE_USER)
       if hresult != SCARD_S_SUCCESS:
-        self.data_critical.emit( 'Failed to establish context: ' + SCardGetErrorMessage(hresult))
-        raise error( 'Failed to establish context: ' + SCardGetErrorMessage(hresult))
+        self.data_critical.emit( 'Failed to establish Direct context: ' + SCardGetErrorMessage(hresult))
+        raise error( 'Failed to establish Direct context: ' + SCardGetErrorMessage(hresult))
       # print('Context established!')
-      self.data_update.emit('Context established!')
+      self.data_update.emit('Direct Context established!')
 
       try:
         hresult, readers_cmd = SCardListReaders(hcontext_cmd, [])
@@ -432,10 +432,10 @@ class NFC_Thread(QtCore.QThread):
         ''
         hresult = SCardReleaseContext(hcontext_cmd)
         if hresult != SCARD_S_SUCCESS:
-            self.data_critical.emit( 'Failed to release context: ' + SCardGetErrorMessage(hresult))
-            raise error( 'Failed to release context: ' + SCardGetErrorMessage(hresult))
+            self.data_critical.emit( 'Failed to release Direct context: ' + SCardGetErrorMessage(hresult))
+            raise error( 'Failed to release Direct context: ' + SCardGetErrorMessage(hresult))
         print('Released context.')
-        self.data_update.emit('Released context.')
+        self.data_update.emit('Released Direct context.')
 
 
 
