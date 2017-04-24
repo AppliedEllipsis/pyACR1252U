@@ -12,6 +12,8 @@
  - conda install pip
  - conda install PyQT
  - pip install pyautogui
+ 
+ - pip install -U nuitka
 
 **For python 3.5**
  - pip install pyscard-1.9.5-cp35-cp35m-win32.whl
