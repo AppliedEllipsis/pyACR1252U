@@ -315,6 +315,7 @@ class NFC_Thread(QtCore.QThread):
             self.data_update.emit("nfc_process_state Programming Mode Found for code: " + str(self.programming_code) )
             # update binary block
             data, sw1, sw2 = connection.transmit(  [ 0xFF, 0xD6, 0x00, 0x5, 0x10] + toDec("!~" + str(self.programming_code) + "~!") )
+            data, sw1, sw2 = connection.transmit( [0xff, 0x0, 0x40, 0b01000101, 0x04, 0x01, 0x01, 0x02, 0x02] )
             self.data_programming_done.emit("Done programming... ") # + str(self.programming_code) )
             # print("%x %x" % (sw1, sw2))
             # print(data)
