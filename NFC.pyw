@@ -31,7 +31,7 @@ myappid = u'com.professionalsounding.nfc-tool' # arbitrary string
 ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 
 
-qtCreatorFile = "ui/nfc.ui"
+qtCreatorFile = "ui/nfc.ui"  # Edit the UI with QTDesigner (\Anaconda3\Library\bin\designer.exe)
 
 Ui_MainWindow, QtBaseClass = uic.loadUiType(qtCreatorFile)
 
@@ -488,7 +488,7 @@ def main():
   sys.exit(app.exec_())
 
 if __name__ == '__main__':
-  if is_process_name_running_more_than_once('nfc.exe'):  # this will only work against exe copies
+  if is_process_name_runnnig_more_than_once('nfc.exe'):  # this will only work against exe copies
     msg = "Error: There is another copy of this application running.."
     print(msg)
     ctypes.windll.user32.MessageBoxW(None, msg, "NFC", 0x10 | 0 | 0x1000) # flags MB_ICONERROR | MB_OK | MB_SYSTEMMODAL
