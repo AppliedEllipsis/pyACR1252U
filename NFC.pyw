@@ -449,16 +449,16 @@ def toStr(s):
 
 
 
-def is_process_name_running(process_name):
-  # try:
+def is_process_name_running_more_than_once(process_name):
+  try:
   DETACHED_PROCESS = 0x00000008
   res = subprocess.check_output(['wmic', 'process', 'get', 'caption'], creationflags=DETACHED_PROCESS, stderr=subprocess.STDOUT)
-  # except subprocess.CalledProcessError as e:
-  #   # raise RuntimeError("command '{}' return with error (code {}): {}".format(e.cmd, e.returncode, e.output))
-  #   return False
+  except subprocess.CalledProcessError as e:
+    # raise RuntimeError("command '{}' return with error (code {}): {}".format(e.cmd, e.returncode, e.output))
+    return False
   res = res.decode('unicode_escape')
   # print('already check:', res)
-  if process_name.lower() in res.lower():
+  if res.lower().count(process_name.lower()) > 1:
     return True
   else:
     return False
@@ -488,10 +488,10 @@ def main():
   sys.exit(app.exec_())
 
 if __name__ == '__main__':
-  if is_process_name_running('nfc.exe'):
+  if is_process_name_running_more_than_once('nfc.exe'):  # this will only work against exe copies
     msg = "Error: There is another copy of this application running.."
     print(msg)
-    ctypes.windll.user32.MessageBoxW(None, msg, "NFC", 0x10 | 0 | 0x1000)
+    ctypes.windll.user32.MessageBoxW(None, msg, "NFC", 0x10 | 0 | 0x1000) # flags MB_ICONERROR | MB_OK | MB_SYSTEMMODAL
   else:
     main()
 
