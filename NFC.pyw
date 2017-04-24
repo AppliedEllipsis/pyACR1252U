@@ -51,16 +51,15 @@ class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
 
        showAction.triggered.connect(self.show_window)
        exitAction.triggered.connect(self.exit)
-       #QtCore.QObject.connect(showAction,QtCore.SIGNAL('triggered()'), self.showit)
-       #QtCore.QObject.connect(exitAction,QtCore.SIGNAL('triggered()'), self.exit)
-       # add double click and more events
-       # QtCore.QObject.connect(self,QtCore.SIGNAL('activated(QSystemTrayIcon::ActivationReason)'), self.showit)
-       # self.connect(self.icon, SIGNAL("activated(QSystemTrayIcon::ActivationReason)"), self.iconClicked)
        self.activated.connect(self.handle_activated)
 
     def show_window(self):
-      print('tray show_window()')
-      self.window.showNormal()
+      if self.window.isVisible():
+        print('tray show_window(hide)')
+        self.window.hide()
+      else:
+        print('tray show_window()')
+        self.window.showNormal()
 
     def handle_activated(self, reason):
       print('tray handle_activated()', reason)
