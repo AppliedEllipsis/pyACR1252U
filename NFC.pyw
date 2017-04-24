@@ -420,7 +420,7 @@ class NFC_Thread(QtCore.QThread):
           if hresult != SCARD_S_SUCCESS:
             raise(error, 'SCardConnect(): ' + SCardGetErrorMessage(hresult))
           # pprint(self.reader_hcard_)
-          self.send_control_code(hcard, [0xE0, 0x0, 0x0, 0x21, 0x01, 0b11100100]) # disable led unless contact, then make it orange, disable beeps unless we beep it
+          self.send_control_code(hcard, [0xE0, 0x0, 0x0, 0x21, 0x01, 0b11100100]) # disable led unless contact, then make it orange, disable beeps unless we beep it # default is 0b01111111
           self.beep(hcard, 0x03)
           time.sleep(0.1)
 
